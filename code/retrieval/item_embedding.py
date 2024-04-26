@@ -32,7 +32,7 @@ class ItemModel(tf.keras.Model):
             )
         ])
 
-        self.embed_items_gics = tf.keras.Sequential([
+        self.embed_item_gics = tf.keras.Sequential([
             tf.keras.layers.StringLookup(
                 vocabulary = unique_item_gics,
                 mask_token = None
@@ -69,7 +69,7 @@ class ItemModel(tf.keras.Model):
         return tf.concat([
             self.embed_item_id(item_id),
             self.embed_item_name(item_name),
-            self.embed_items_gics(item_gics)
+            self.embed_item_gics(item_gics)
         ],
         axis = 1)
         

@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import tensorflow as tf
-import tensorflow_datasets as tfds
+# import tensorflow_datasets as tfds
 
 import tensorflow_recommenders as tfrs
 
@@ -38,19 +38,19 @@ model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.1))
 train_ds = train_ds.shuffle(1000).batch(128) #.cache()
 
 model.fit(
-    train_list_ds, 
-    epochs=20, 
+    train_ds, 
+    epochs=5, 
     verbose = 1,
     callbacks=[tensorboard_callback]
     )
 
 #save model
-base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
+base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(datetime.now().strftime("%Y_%m_%d"))
 
 if not os.path.exists(base):
     os.makedirs(base)
 
-model_name = 'tf_rating_{}'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
+model_name = 'tf_retrival_{}'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
 save_path = os.path.join(base,model_name)
 
 model.save_weights(save_path)

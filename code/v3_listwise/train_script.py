@@ -14,8 +14,6 @@ from datetime import datetime
 
 base_loc = r'D:\dev work\recommender systems\ATRAD_CARS'
 
-train_ds = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/train").cache() #data\ratings_train
-test_ds = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/test").cache()
 portfolios = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/portfolios_tfds").cache()
 
 train_list_ds = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/train_lists_ds").cache()
@@ -37,6 +35,7 @@ unique_user_ids = np.unique(np.concatenate(list(user_ids)))
 
 model = Recommender(
     # use_timestamp = True,
+    loss = tf.keras.losses.MeanSquaredError(),
     portfolios = portfolios
     )
 
@@ -61,7 +60,7 @@ model.fit(
     )
 
 #save model
-base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
+base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(datetime.now().strftime("%Y_%m_%d"))
 
 if not os.path.exists(base):
     os.makedirs(base)
@@ -73,3 +72,9 @@ model.save_weights(save_path)
 
 print()
 print("saved model @ : {}".format(save_path))
+
+print()
+print("*** TESTING ***")
+
+model = model.evaluate(test_ds, return_dict=True)
+print("NDCG of the MSE Model: {:.4f}".format(model["ndcg_metric"]))

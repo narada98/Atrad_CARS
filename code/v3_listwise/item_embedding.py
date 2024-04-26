@@ -1,25 +1,28 @@
-import tensorflow as tf 
+import tensorflow as tf
 
-'''
-this handles embedding item Identifiers and contextual data.
-movie title itself is used as the contexual information here.
-using timestamp is 
-'''
+def global_average_mean(x):
+  """Custom layer to perform global average mean pooling."""
+  axis = -2  # Reduce mean along the last dimension
+  return tf.reduce_mean(x, axis=axis)
+
+def reshaper(x):
+    shape = (-1,5,1)
+    return tf.reshape(x, shape)
 
 class ItemModel(tf.keras.Model):
     def __init__(
         self,
         unique_item_ids,
-        # unique_item_names,
-        unique_item_gics
+        unique_item_gics,
+        unique_item_names
 
         ):
         super().__init__()
 
         self.max_tokens = 10000
         self.unique_item_ids = unique_item_ids
-        # self.unique_item_names = unique_item_names
         self.unique_item_gics = unique_item_gics
+        self.unique_item_names = unique_item_names
 
         self.embed_item_id = tf.keras.Sequential([
             tf.keras.layers.StringLookup(
@@ -43,32 +46,40 @@ class ItemModel(tf.keras.Model):
             )
         ])
 
+        self.textvectorizer = tf.keras.layers.TextVectorization(
+            max_tokens = self.max_tokens,
+            # ragged = True
+        )
 
-        # self.textvectorizer = tf.keras.layers.TextVectorization(
-        #     max_tokens = self.max_tokens
-        # )
+        self.embed_item_name = tf.keras.Sequential([
 
-        # self.embed_item_name = tf.keras.Sequential([
-        #     self.textvectorizer,
+            # tf.keras.layers.Reshape((-1,5,1)),
+            tf.keras.layers.Lambda(reshaper),
 
-        #     tf.keras.layers.Embedding(
-        #         input_dim = self.max_tokens,
-        #         output_dim = 16,
-        #         mask_zero = True
-        #     ),
+            self.textvectorizer,
 
-        #     tf.keras.layers.GlobalAveragePooling1D() # reduces dimensionality to 1d (embedding layer embeddeds each word in a title one by one)
-        # ])
+            tf.keras.layers.Embedding(
+                input_dim = self.max_tokens,
+                output_dim = 32,
+                mask_zero = True
+            ),
 
-        # self.textvectorizer.adapt(self.unique_item_names)
-    
+            tf.keras.layers.Lambda(global_average_mean)
+            # tf.keras.layers.GlobalAveragePooling1D(), # reduces dimensionality to 1d (embedding layer embeddeds each word in a title one by one)
+            
+            # tf.keras.layers.Flatten() 
+            # squeeze_custom_layer()
+        ])
+
+        self.textvectorizer.adapt(self.unique_item_names)
+
     def call(self, inputs):
 
-        item_id,  item_gics = inputs  #item_name,
+        item_id,  item_gics, item_name = inputs
 
         return tf.concat([
             self.embed_item_id(item_id),
-            self.embed_items_gics(item_gics)
+            self.embed_items_gics(item_gics),
+            self.embed_item_name(item_name)
         ],
-        axis = 1)
-    
+        axis = 2)

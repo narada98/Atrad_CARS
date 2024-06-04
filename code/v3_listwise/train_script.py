@@ -16,8 +16,8 @@ base_loc = r'D:\dev work\recommender systems\ATRAD_CARS'
 
 portfolios = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/portfolios_tfds").cache()
 
-train_list_ds = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/train_lists_ds").cache()
-test_list_ds = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/test_lists_ds").cache()
+train_list_ds = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/rating_lists_10/train").cache()
+test_list_ds = tf.data.Dataset.load("D:/dev work/recommender systems/Atrad_CARS/data/rating_lists_10/test").cache()
 
 items_ids = portfolios.batch(10000).map(lambda x: x["STOCKCODE"])
 item_names = portfolios.batch(10000).map(lambda x: x["STOCKNAME"])
@@ -76,5 +76,5 @@ print("saved model @ : {}".format(save_path))
 print()
 print("*** TESTING ***")
 
-model = model.evaluate(test_ds, return_dict=True)
+model = model.evaluate(test_list_ds, return_dict=True)
 print("NDCG of the MSE Model: {:.4f}".format(model["ndcg_metric"]))

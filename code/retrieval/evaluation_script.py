@@ -32,15 +32,10 @@ timestamp_buckets = np.linspace(
 
 loaded_model = Recommender(
     use_timestamp = True,
-    unique_user_ids = unique_user_ids, 
-    timestamps = timestamps, 
-    timestamp_buckets = timestamp_buckets,
-    unique_item_ids = unique_item_ids,
-    unique_item_names = unique_item_names,
-    unique_item_gics = unique_item_gics
+    portfolios= portfolios
 )
 
-loaded_model.load_weights("D:/dev work/recommender systems/ATRAD_CARS/model_weights/2024_04_09_16_07/tf_rating_2024_04_09_16_07")
+loaded_model.load_weights("D:/dev work/recommender systems/ATRAD_CARS/model_weights/2024_04_30/tf_retrival_2024_04_30_16_52")
 
 loaded_model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.1))
 

@@ -6,7 +6,7 @@ def global_average_mean(x):
   return tf.reduce_mean(x, axis=axis)
 
 def reshaper(x):
-    shape = (-1,5,1)
+    shape = (-1,10,1)
     return tf.reshape(x, shape)
 
 class ItemModel(tf.keras.Model):

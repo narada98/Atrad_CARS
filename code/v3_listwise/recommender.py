@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow_recommenders as tfrs
 import tensorflow_ranking as tfr
 
-from typing import Dict, Text
+# from typing import Dict, Text
 
 from item_embedding import ItemModel
 from user_embedding import UserModel

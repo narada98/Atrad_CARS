@@ -11,7 +11,8 @@ class ItemModel(tf.keras.Model):
         self,
         unique_item_ids,
         unique_item_names,
-        unique_item_gics
+        unique_item_gics,
+        # map_ = False
 
         ):
         super().__init__()
@@ -20,6 +21,9 @@ class ItemModel(tf.keras.Model):
         self.unique_item_ids = unique_item_ids
         self.unique_item_names = unique_item_names
         self.unique_item_gics = unique_item_gics
+        # self.map_ = map_
+
+        
 
         self.embed_item_id = tf.keras.Sequential([
             tf.keras.layers.StringLookup(
@@ -28,7 +32,7 @@ class ItemModel(tf.keras.Model):
             ),
             tf.keras.layers.Embedding(
                 input_dim = len(self.unique_item_ids)+1,
-                output_dim = 17 #32
+                output_dim = 8 #32
             )
         ])
 
@@ -39,7 +43,7 @@ class ItemModel(tf.keras.Model):
             ),
             tf.keras.layers.Embedding(
                 input_dim = len(unique_item_gics)+1,
-                output_dim = 16 #len(unique_item_gics)
+                output_dim = 8 #len(unique_item_gics)
             )
         ])
 
@@ -53,7 +57,7 @@ class ItemModel(tf.keras.Model):
 
             tf.keras.layers.Embedding(
                 input_dim = self.max_tokens,
-                output_dim = 32,
+                output_dim = 16,
                 mask_zero = True
             ),
 
@@ -62,9 +66,12 @@ class ItemModel(tf.keras.Model):
 
         self.textvectorizer.adapt(self.unique_item_names)
     
-    def call(self, inputs):
+    def call(self, inputs, map_ = False):
 
-        item_id, item_name, item_gics = inputs
+        if map_ == False:
+            item_id, item_name, item_gics = inputs
+        else:
+            item_id, item_name, item_gics = inputs['STOCKCODE'], inputs['STOCKNAME'], inputs['GICS']
 
         return tf.concat([
             self.embed_item_id(item_id),

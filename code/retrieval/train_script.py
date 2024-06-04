@@ -24,8 +24,7 @@ model = Recommender(
     portfolios = portfolios
     )
 
-
-log_dir = os.path.join(base_loc ,"logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+log_dir = os.path.join(base_loc ,"logs/fit/retriever/" + "retriever" + datetime.now().strftime("%Y%m%d-%H%M%S"))
 # log_dir = "../../logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = tf.keras.callbacks.TensorBoard(
     log_dir=log_dir,
@@ -33,16 +32,22 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(
     embeddings_freq = 1,
     write_images = True)
 
-model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.1))
+model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.3))
 
 train_ds = train_ds.shuffle(1000).batch(128) #.cache()
+test_ds = test_ds.batch(128)
 
-model.fit(
+history = model.fit(
     train_ds, 
-    epochs=5, 
+    epochs=3, 
     verbose = 1,
+    validation_data=test_ds,
+    validation_freq=1,
     callbacks=[tensorboard_callback]
     )
+
+print(history.history.keys())
+
 
 #save model
 base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(datetime.now().strftime("%Y_%m_%d"))
@@ -50,7 +55,8 @@ base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(dat
 if not os.path.exists(base):
     os.makedirs(base)
 
-model_name = 'tf_retrival_{}'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
+# model_name = 'tf_retrival_{}'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
+model_name = 'tf_retrival_opt'
 save_path = os.path.join(base,model_name)
 
 model.save_weights(save_path)

@@ -78,6 +78,7 @@ class Recommender(tfrs.models.Model):
     user_embeddings = self.user_model(
       (
         features['CDSACCNO'],
+
         features['UNIX_TS']
        )
     )

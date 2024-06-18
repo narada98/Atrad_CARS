@@ -72,12 +72,9 @@ class ItemModel(tf.keras.Model):
 
         self.textvectorizer.adapt(self.unique_item_names)
     
-    def call(self, inputs, map_ = False):
+    def call(self, inputs):
 
-        if map_ == False:
-            item_id, item_name, item_gics = inputs
-        else:
-            item_id, item_name, item_gics = inputs['STOCKCODE'], inputs['STOCKNAME'], inputs['GICS']
+        item_id, item_name, item_gics = inputs['STOCKCODE'], inputs['STOCKNAME'], inputs['GICS']
 
         return tf.concat([
             self.embed_item_id(item_id),
@@ -134,7 +131,7 @@ class UserModel(tf.keras.Model):
     
     def call(self, inputs):
 
-        user_id, timestamp = inputs
+        user_id, timestamp = inputs["CDSACCNO"], inputs["UNIX_TS"]
 
         if self.use_timestamp:
             user_id_embed = self.embed_user_id(user_id)
@@ -197,30 +194,18 @@ class Retriever(tfrs.models.Model):
     )
 
     self.retrieval_metrics = tfrs.metrics.FactorizedTopK(
-      candidates= self.portfolios.batch(128).map(lambda x:generate_embedding(x, self.item_model)),
+      candidates= self.portfolios.batch(128).map(lambda x:self.item_model(x)),
       ks = [10]
     )
-    
+
     self.task = tfrs.tasks.Retrieval(
       metrics = self.retrieval_metrics
     )
 
   def compute_loss(self, features, training=False) -> tf.Tensor:
-    user_embeddings = self.user_model(
-      (
-        features['CDSACCNO'],
+    user_embeddings = self.user_model(features)
 
-        features['UNIX_TS']
-       )
-    )
-
-    item_embeddings = self.item_model(
-      (
-        features['STOCKCODE'],
-        features['STOCKNAME'],
-        features['GICS']
-      )
-    )
+    item_embeddings = self.item_model(features)
     
     return self.task(
       query_embeddings = user_embeddings,

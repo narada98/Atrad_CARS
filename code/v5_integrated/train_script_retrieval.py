@@ -8,7 +8,7 @@ import tensorflow_recommenders as tfrs
 
 from tqdm.keras import TqdmCallback
 
-from retrieval_recommender import Retriever
+from retrieval_recommender_v2 import Retriever
 
 # from utils import dataset_to_dataframe
 from datetime import datetime
@@ -19,13 +19,17 @@ train_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\dat
 test_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\retriver_test").cache()
 portfolios = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\portfolios").cache()
 
+# train_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\retriver_hoo_train").cache()
+# test_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\retriver_hoo_test").cache()
+# portfolios = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\portfolios").cache()
+
 model = Retriever(
     use_timestamp = True,
     portfolios = portfolios
     )
 
-log_dir = os.path.join(base_loc ,"logs/fit/retriever_port_v2/" + "retriever" + datetime.now().strftime("%Y%m%d-%H%M%S"))
-# log_dir = "../../logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+log_dir = os.path.join(base_loc ,"logs/fit/retriever_port_v2/" + "retriever_" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+# log_dir = os.path.join(base_loc ,"logs/fit/retriever_port_v2/" + "retriever_hoo_hpo_" + datetime.now().strftime("%Y%m%d-%H%M%S"))
 tensorboard_callback = tf.keras.callbacks.TensorBoard(
     log_dir=log_dir,
     histogram_freq=0,
@@ -39,7 +43,7 @@ test_ds = test_ds.batch(256)
 
 history = model.fit(
     train_ds, 
-    epochs=3, 
+    epochs=10, 
     verbose = 0,
     validation_data=test_ds,
     validation_freq=1,
@@ -50,13 +54,13 @@ print(history.history.keys())
 
 
 #save model
-base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(datetime.now().strftime("%Y_%m_%d"))
+base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(datetime.now().strftime("%Y_%m_%d_%M"))
 
 if not os.path.exists(base):
     os.makedirs(base)
 
-# model_name = 'tf_retrival_{}'.format(datetime.now().strftime("%Y_%m_%d_%H_%M"))
-model_name = 'retriever_port_v2'
+model_name = 'retriever_port_v2' 
+#model_name = 'retriever_port_v2_hoo'
 save_path = os.path.join(base,model_name)
 
 model.save_weights(save_path)

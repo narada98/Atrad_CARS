@@ -18,7 +18,6 @@ class ItemModel(tf.keras.Model):
         unique_item_ids,
         unique_item_names,
         unique_item_gics,
-        embedding_dims,
         # map_ = False
 
         ):
@@ -28,7 +27,6 @@ class ItemModel(tf.keras.Model):
         self.unique_item_ids = unique_item_ids
         self.unique_item_names = unique_item_names
         self.unique_item_gics = unique_item_gics
-        self.embedding_dims = embedding_dims
         # self.map_ = map_
 
         
@@ -40,8 +38,7 @@ class ItemModel(tf.keras.Model):
             ),
             tf.keras.layers.Embedding(
                 input_dim = len(self.unique_item_ids)+1,
-                output_dim = embedding_dims[0] #8 #32
-                
+                output_dim = 8 #32
             )
         ])
 
@@ -52,7 +49,7 @@ class ItemModel(tf.keras.Model):
             ),
             tf.keras.layers.Embedding(
                 input_dim = len(unique_item_gics)+1,
-                output_dim = embedding_dims[1] #8 #len(unique_item_gics)
+                output_dim = 8 #len(unique_item_gics)
             )
         ])
 
@@ -66,7 +63,7 @@ class ItemModel(tf.keras.Model):
 
             tf.keras.layers.Embedding(
                 input_dim = self.max_tokens,
-                output_dim = embedding_dims[2], #16,
+                output_dim = 16,
                 mask_zero = True
             ),
 
@@ -75,12 +72,9 @@ class ItemModel(tf.keras.Model):
 
         self.textvectorizer.adapt(self.unique_item_names)
     
-    def call(self, inputs, map_ = False):
+    def call(self, inputs):
 
-        if map_ == False:
-            item_id, item_name, item_gics = inputs
-        else:
-            item_id, item_name, item_gics = inputs['STOCKCODE'], inputs['STOCKNAME'], inputs['GICS']
+        item_id, item_name, item_gics = inputs['STOCKCODE'], inputs['STOCKNAME'], inputs['GICS']
 
         return tf.concat([
             self.embed_item_id(item_id),
@@ -97,9 +91,7 @@ class UserModel(tf.keras.Model):
         use_timestamp,
         unique_user_ids, 
         timestamps,
-        timestamp_buckets,
-        embedding_dims
-        ):
+        timestamp_buckets):
 
         super().__init__()
 
@@ -107,7 +99,6 @@ class UserModel(tf.keras.Model):
         self.unique_user_ids = unique_user_ids
         self.timestamp_buckets = timestamp_buckets
         self.timestamps = timestamps
-        self.embedding_dims = embedding_dims
         
         self.embed_user_id = tf.keras.Sequential([
             tf.keras.layers.StringLookup(
@@ -116,7 +107,7 @@ class UserModel(tf.keras.Model):
             ),
             tf.keras.layers.Embedding(
                 input_dim = len(self.unique_user_ids)+1,
-                output_dim = embedding_dims[0] #16
+                output_dim = 16
             )
         ])
 
@@ -128,7 +119,7 @@ class UserModel(tf.keras.Model):
 
                 tf.keras.layers.Embedding(
                     input_dim = len(list(self.timestamp_buckets))+1 ,
-                    output_dim = embedding_dims[1] #15
+                    output_dim = 15
                 )
             ])
 
@@ -140,7 +131,7 @@ class UserModel(tf.keras.Model):
     
     def call(self, inputs):
 
-        user_id, timestamp = inputs
+        user_id, timestamp = inputs["CDSACCNO"], inputs["UNIX_TS"]
 
         if self.use_timestamp:
             user_id_embed = self.embed_user_id(user_id)
@@ -158,10 +149,7 @@ class Retriever(tfrs.models.Model):
   def __init__(
     self,
     use_timestamp,
-    portfolios,
-    user_model_embedding_dims,
-    item_model_embedding_dims
-
+    portfolios
     ):
 
     super().__init__()
@@ -192,27 +180,22 @@ class Retriever(tfrs.models.Model):
         self.min_timestamp, self.max_timestamp, num=1000,
     )
 
-    self.user_model_embedding_dims = user_model_embedding_dims
-    self.item_model_embedding_dims = item_model_embedding_dims
-
     self.item_model = ItemModel(
       unique_item_ids = self.unique_item_ids,
       unique_item_names = self.unique_item_names,
-      unique_item_gics = self.unique_item_gics,
-      embedding_dims = self.user_model_embedding_dims
+      unique_item_gics = self.unique_item_gics
     )
 
     self.user_model = UserModel(
       use_timestamp = self.use_timestamp,
       unique_user_ids = self.unique_user_ids, 
       timestamps = self.timestamps, 
-      timestamp_buckets = self.timestamp_buckets,
-      embedding_dims= self.item_model_embedding_dims
+      timestamp_buckets = self.timestamp_buckets
     )
 
     self.retrieval_metrics = tfrs.metrics.FactorizedTopK(
-      candidates= self.portfolios.batch(128).map(lambda x:
-        generate_embedding(x, self.item_model))
+      candidates= self.portfolios.batch(128).map(lambda x:self.item_model(x)),
+      ks = [10]
     )
 
     self.task = tfrs.tasks.Retrieval(
@@ -220,21 +203,9 @@ class Retriever(tfrs.models.Model):
     )
 
   def compute_loss(self, features, training=False) -> tf.Tensor:
-    user_embeddings = self.user_model(
-      (
-        features['CDSACCNO'],
+    user_embeddings = self.user_model(features)
 
-        features['UNIX_TS']
-       )
-    )
-
-    item_embeddings = self.item_model(
-      (
-        features['STOCKCODE'],
-        features['STOCKNAME'],
-        features['GICS']
-      )
-    )
+    item_embeddings = self.item_model(features)
     
     return self.task(
       query_embeddings = user_embeddings,

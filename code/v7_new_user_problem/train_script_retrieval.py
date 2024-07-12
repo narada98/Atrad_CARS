@@ -15,22 +15,16 @@ from datetime import datetime
 
 base_loc = r'D:\dev work\recommender systems\ATRAD_CARS'
 
-train_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\retriver_train").cache() #data\ratings_train
-test_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\retriver_test").cache()
-portfolios = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\portfolios").cache()
-
-# train_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\retriver_hoo_train").cache()
-# test_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\retriver_hoo_test").cache()
-# portfolios = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2\portfolios").cache()
+train_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2_fixed_port_size_20\retriver_train").cache() #data\ratings_train
+test_ds = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2_fixed_port_size_20\retriver_test").cache()
+portfolios = tf.data.Dataset.load(r"D:\dev work\recommender systems\Atrad_CARS\data\portfolios_v2_fixed_port_size_20\portfolios").cache()
 
 model = Retriever(
     use_timestamp = True,
     portfolios = portfolios
     )
 
-# log_dir = os.path.join(base_loc ,"logs/fit/retriever_port_v2/" + "retriever_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
-log_dir = os.path.join(base_loc ,"logs/fit/retriever_port_v2/" + "retriever_v3_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
-# log_dir = os.path.join(base_loc ,"logs/fit/retriever_port_v2/" + "retriever_hoo_hpo_" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+log_dir = os.path.join(base_loc ,"logs/fit/retriever_port_v2_fixed_port_size_20/" + "retriever_v3_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
 
 tensorboard_callback = tf.keras.callbacks.TensorBoard(
     log_dir=log_dir,
@@ -61,7 +55,7 @@ base = r'D:\dev work\recommender systems\ATRAD_CARS\model_weights\{}'.format(dat
 if not os.path.exists(base):
     os.makedirs(base)
 
-model_name = 'retriever_v3_port_v2_' 
+model_name = 'retriever_v3_port_v2__fixed_port_size_20' 
 #model_name = 'retriever_port_v2_hoo'
 save_path = os.path.join(base,model_name)
 
